@@ -12,30 +12,35 @@ import org.springframework.stereotype.Service;
 @Service
 class DataReaderImpl implements DataReader {
 
-  @Autowired private PaginationService paginationService;
+  @Autowired 
+  private PaginationService paginationService;
 
   @Override
   public Stream<String> fetchLimitadData(int limit) {
+    log.info("Fetching limited data with limit: {}", limit);
+    // Fetch the data stream and limit it to the specified number of elements
     return fetchPaginatedDataAsStream().limit(limit);
   }
 
   @Override
   public Stream<String> fetchFullData() {
+    log.info("Fetching full data without limit.");
+    // Fetch all paginated data as a stream
     return fetchPaginatedDataAsStream();
   }
 
   /**
-   * This method is where the candidate should add the implementation. Logs have been added to track
-   * the data fetching behavior. Do not modify any other areas of the code.
+   * This method fetches paginated data as a stream.
    */
   private @Nonnull Stream<String> fetchPaginatedDataAsStream() {
     log.info("Fetching paginated data as stream.");
-
-    // Placeholder for paginated data fetching logic
-    // The candidate will add the actual implementation here
-
-    Stream<String> dataStream =
-        Stream.empty(); // Temporary, will be replaced by the actual data stream
-    return dataStream.peek(item -> log.info("Fetched Item: {}", item));
+    
+    int page = 1;          // Start from the first page
+    int pageSize = 10;      // Define a page size (can be adjusted)
+    
+    return Stream.generate(() -> paginationService.getPaginatedData(page++, pageSize))
+                 .takeWhile(pageData -> !pageData.isEmpty())   // Continue while there is data
+                 .flatMap(List::stream)                       // Flatten the List<String> into a Stream<String>
+                 .peek(item -> log.info("Fetched Item: {}", item));  // Log each item
   }
 }
